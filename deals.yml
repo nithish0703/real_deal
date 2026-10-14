@@ -1,0 +1,42 @@
+name: Malivu Mama
+
+on:
+  schedule:
+    - cron: "17 * * * *"   # ovvoru mani nerathukkum (UTC :17)
+  workflow_dispatch:         # Actions tab-la kai-yaala run panna
+
+permissions:
+  contents: write
+
+concurrency:
+  group: malivu-mama
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Run bot
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python bot.py
+
+      - name: Save price history
+        run: |
+          git config user.name "malivu-mama"
+          git config user.email "malivu-mama@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "price history update" -q
+          git pull --rebase -q || true
+          git push -q
