@@ -22,6 +22,10 @@ CATEGORIES = {
     "Bags": [
         "laptop backpack", "college bag", "women handbag", "sling bag men",
     ],
+    "Watches": [
+        "men analog watch", "women analog watch", "men digital watch",
+        "couple watch", "kids watch",
+    ],
     "Travel": [
         "trolley bag", "duffle bag travel", "travel pouch", "neck pillow travel",
     ],
