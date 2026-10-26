@@ -71,6 +71,13 @@ def fetch_search(session, keyword, page=1):
 
 
 # ---------------------------------------------------------------- parsing
+def hd_image(url):
+    """Search thumbnail (._AC_UL320_.jpg) -> 1000px image (._AC_SL1000_.jpg)."""
+    if not url:
+        return None
+    return re.sub(r"\._[A-Za-z0-9_,.-]+_\.(jpg|jpeg|png|webp)$", r"._AC_SL1000_.\1", url)
+
+
 def to_price(text):
     if not text:
         return None
@@ -105,7 +112,7 @@ def parse_search(html):
             "title": title,
             "price": price,
             "mrp": mrp if mrp and mrp > price else None,
-            "image": img_el.get("src") if img_el else None,
+            "image": hd_image(img_el.get("src")) if img_el else None,
             "rating": rating_el.get_text(strip=True).split(" ")[0] if rating_el else None,
         })
     return items
