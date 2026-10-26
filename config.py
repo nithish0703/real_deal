@@ -31,8 +31,30 @@ CATEGORIES = {
     ],
 }
 
+# AJIO-la search panna vendiya keywords (AJIO fashion site, adhanaala electronics/daily use illa)
+AJIO_CATEGORIES = {
+    "Shoes": [
+        "men sneakers", "men sports shoes", "women sneakers", "men casual shoes",
+        "men formal shoes", "men sandals", "women flats",
+    ],
+    "Clothing": [
+        "men t shirts", "men shirts", "men jeans", "men track pants",
+        "women kurtas", "women tops", "women jeans", "men jackets",
+    ],
+    "Bags": [
+        "backpacks", "women handbags", "men sling bags", "laptop bags",
+    ],
+    "Watches": [
+        "men watches", "women watches", "smart watches",
+    ],
+    "Travel": [
+        "trolley bags", "duffle bags",
+    ],
+}
+
 # Ovvoru run-lum ethana keywords check pannanum (GitHub free minutes-ku kammiyaa vechiruken)
-KEYWORDS_PER_RUN = 14
+KEYWORDS_PER_RUN = 14          # Amazon
+AJIO_KEYWORDS_PER_RUN = 8      # AJIO (API fast, oru search-ku 45 products)
 
 # MRP filter (0 = off; real deal-ai history dhaan decide pannum)
 MIN_MRP_DISCOUNT = 0
@@ -61,4 +83,4 @@ MAX_MESSAGES_PER_RUN = 15
 HISTORY_KEEP_DAYS = 45
 
 # Ovvoru run-um ivlo seconds-kulla search-ai niruthidum (GitHub job 10 min limit)
-TIME_BUDGET_SEC = 420
+TIME_BUDGET_SEC = 330
