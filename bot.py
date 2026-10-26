@@ -174,22 +174,28 @@ def esc(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
+CATEGORY_EMOJI = {"Electronics": "🎧", "Shoes": "👟", "Clothing": "👕", "Daily use": "🧴",
+                  "Bags": "🎒", "Watches": "⌚", "Travel": "🧳"}
+
+
 def build_message(item, category, status, info):
+    emoji = CATEGORY_EMOJI.get(category, "🛍️")
     price_line = f"💰 <b>₹{item['price']:,}</b>"
     if item.get("mrp"):
         disc = round((item["mrp"] - item["price"]) / item["mrp"] * 100)
-        price_line += f"   <s>₹{item['mrp']:,}</s>   ({disc}% off MRP)"
-    lines = [f"<b>{esc(item['title'][:180])}</b>", "", price_line]
+        price_line += f"  <s>₹{item['mrp']:,}</s>  ({disc}% OFF MRP)"
+    lines = [f"{emoji} <b>{esc(item['title'][:180])}</b>", price_line]
     if status == "REAL":
+        days = info["days"]
         lines += [
-            f"✅ <b>REAL DEAL</b> — usual price ₹{info['usual']:,}, ippo {info['real_drop']}% kammi",
-            f"📉 Idhukku munnaadi 30 naal lowest: ₹{info['low30']:,}  ({info['days']} naal history)",
+            f"✅ <b>REAL DEAL</b> — {info['real_drop']}% cheaper than the usual price of ₹{info['usual']:,}!",
+            f"📉 Lowest Price in 30 Days: ₹{info['low30']:,} ({days} day{'s' if days != 1 else ''} of price history)",
         ]
     else:
-        lines.append(f"⏳ Verify aagala — {info['days']} naal history dhaan irukku")
+        lines.append(f"⏳ Not verified yet — only {info['days']} days of price history")
     if item.get("rating"):
-        lines.append(f"⭐ {item['rating']}/5")
-    lines.append(f"🏷 {category}")
+        lines.append(f"⭐ Rating: {item['rating']}/5")
+    lines.append(f"🏷️ Category: {category}")
     return "\n".join(lines)
 
 
@@ -207,7 +213,7 @@ def tg(method, payload):
 
 def send_deal(item, text):
     chat = os.environ["TELEGRAM_CHAT_ID"]
-    button = {"inline_keyboard": [[{"text": "🛒 Amazon-la paaru",
+    button = {"inline_keyboard": [[{"text": "🛒 Shop on Amazon",
                                     "url": f"https://www.amazon.in/dp/{item['asin']}"}]]}
     try:
         if item.get("image"):
