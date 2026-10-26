@@ -269,12 +269,16 @@ def main():
         time.sleep(random.uniform(4, 9))
 
     sent_count = 0
+    sent_keys = set()  # orey product-oda size/colour variants-ai orey dhadava anuppa
     for asin, (it, cat) in candidates.items():
         status, info = verdict(history, it)
         print(f"  [{status}] ₹{it['price']} / ₹{it['mrp']}  {it['title'][:60]}  {info}")
         if status == "FAKE" or (status == "NEW" and not config.SEND_UNVERIFIED):
             continue
         if not should_send(sent, it) or sent_count >= config.MAX_MESSAGES_PER_RUN:
+            continue
+        key = (it["title"].lower()[:80], it["price"])
+        if key in sent_keys:
             continue
         text = build_message(it, cat, status, info)
         if dry:
@@ -287,6 +291,7 @@ def main():
                 continue
             time.sleep(1.5)
         sent[asin] = {"price": it["price"], "ts": int(NOW.timestamp())}
+        sent_keys.add(key)
         sent_count += 1
 
     # pazhaya data clean

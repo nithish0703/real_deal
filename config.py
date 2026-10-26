@@ -34,8 +34,8 @@ CATEGORIES = {
 # Ovvoru run-lum ethana keywords check pannanum (GitHub free minutes-ku kammiyaa vechiruken)
 KEYWORDS_PER_RUN = 14
 
-# MRP-oda discount ivlo % mela irundha dhaan consider pannum
-MIN_MRP_DISCOUNT = 25
+# MRP filter (0 = off; real deal-ai history dhaan decide pannum)
+MIN_MRP_DISCOUNT = 0
 
 # ---- "Real discount ah?" check ----
 # Ethana naal price history irundha dhaan verdict sollum
