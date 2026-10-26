@@ -32,7 +32,7 @@ CATEGORIES = {
 }
 
 # Ovvoru run-lum ethana keywords check pannanum (GitHub free minutes-ku kammiyaa vechiruken)
-KEYWORDS_PER_RUN = 8
+KEYWORDS_PER_RUN = 14
 
 # MRP-oda discount ivlo % mela irundha dhaan consider pannum
 MIN_MRP_DISCOUNT = 25
@@ -40,6 +40,8 @@ MIN_MRP_DISCOUNT = 25
 # ---- "Real discount ah?" check ----
 # Ethana naal price history irundha dhaan verdict sollum
 MIN_HISTORY_DAYS = 7
+# Kammiyaa ivlo price points irukkanum (oru point-ai vechu mudivu edukka koodaadhu)
+MIN_POINTS = 4
 # Usual price (30-day median) vida ivlo % kammi aagirukkanum
 MIN_REAL_DROP = 10
 # 30-day lowest price-oda ivlo % kulla irukkanum (adhaavadhu "lowest price" nu solla)
@@ -56,4 +58,7 @@ RESEND_AFTER_DAYS = 7
 MAX_MESSAGES_PER_RUN = 15
 
 # Price history ethana naal vechukkanum
-HISTORY_KEEP_DAYS = 120
+HISTORY_KEEP_DAYS = 45
+
+# Ovvoru run-um ivlo seconds-kulla search-ai niruthidum (GitHub job 10 min limit)
+TIME_BUDGET_SEC = 420

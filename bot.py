@@ -34,7 +34,9 @@ def load(path, default):
 
 def save(path, obj):
     DATA.mkdir(exist_ok=True)
-    path.write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")))
+    rows = [f"{json.dumps(k)}:{json.dumps(v, ensure_ascii=False, separators=(',', ':'))}"
+            for k, v in obj.items()]
+    path.write_text("{\n" + ",\n".join(rows) + "\n}\n")
 
 
 # ---------------------------------------------------------------- fetching
@@ -46,8 +48,11 @@ def make_session():
 
 
 def is_blocked(html):
+    if 'data-component-type="s-search-result"' in html:
+        return False  # real results page
     low = html.lower()
-    return "captcha" in low or "api-services-support@amazon.com" in low or len(html) < 5000
+    return ("validatecaptcha" in low or "type the characters you see" in low
+            or "api-services-support@amazon.com" in low or len(html) < 5000)
 
 
 def fetch_search(session, keyword, page=1):
@@ -55,7 +60,7 @@ def fetch_search(session, keyword, page=1):
     params = {"k": keyword, "page": page}
     for attempt in range(2):
         try:
-            r = session.get(url, params=params, timeout=30)
+            r = session.get(url, params=params, timeout=20)
             if r.status_code == 200 and not is_blocked(r.text):
                 return r.text
             print(f"  ! blocked/status {r.status_code} for '{keyword}' (try {attempt + 1})")
@@ -85,17 +90,19 @@ def parse_search(html):
             continue
         if card.select_one(".puis-sponsored-label-text, .s-sponsored-label-text"):
             continue  # ads skip
-        title_el = card.select_one("h2 span") or card.select_one("h2")
+        title_el = card.select_one('[data-cy="title-recipe"]') or card.select_one("h2")
+        h2s = [h.get_text(" ", strip=True) for h in card.select("h2")]
+        title = " ".join(dict.fromkeys(t for t in h2s if t)) or (title_el and title_el.get_text(" ", strip=True))
         price_el = card.select_one("span.a-price:not(.a-text-price) span.a-offscreen")
         mrp_el = card.select_one("span.a-price.a-text-price span.a-offscreen")
         img_el = card.select_one("img.s-image")
         rating_el = card.select_one("span.a-icon-alt")
         price, mrp = to_price(price_el and price_el.get_text()), to_price(mrp_el and mrp_el.get_text())
-        if not (title_el and price):
+        if not (title_el and price and title):
             continue
         items.append({
             "asin": asin,
-            "title": title_el.get_text(" ", strip=True),
+            "title": title,
             "price": price,
             "mrp": mrp if mrp and mrp > price else None,
             "image": img_el.get("src") if img_el else None,
@@ -123,7 +130,8 @@ def verdict(history, item):
     now = NOW.timestamp()
     past = [p for p in pts if now - p[0] > 3 * 3600]  # ippo eduthadha thavira
     info = {}
-    if not past or (now - past[0][0]) < config.MIN_HISTORY_DAYS * DAY:
+    if (not past or (now - past[0][0]) < config.MIN_HISTORY_DAYS * DAY
+            or len(past) < config.MIN_POINTS):
         days = (now - past[0][0]) / DAY if past else 0
         return "NEW", {"days": round(days, 1)}
 
@@ -160,12 +168,11 @@ def esc(s):
 
 
 def build_message(item, category, status, info):
-    disc = round((item["mrp"] - item["price"]) / item["mrp"] * 100)
-    lines = [
-        f"<b>{esc(item['title'][:180])}</b>",
-        "",
-        f"💰 <b>₹{item['price']:,}</b>   <s>₹{item['mrp']:,}</s>   ({disc}% off MRP)",
-    ]
+    price_line = f"💰 <b>₹{item['price']:,}</b>"
+    if item.get("mrp"):
+        disc = round((item["mrp"] - item["price"]) / item["mrp"] * 100)
+        price_line += f"   <s>₹{item['mrp']:,}</s>   ({disc}% off MRP)"
+    lines = [f"<b>{esc(item['title'][:180])}</b>", "", price_line]
     if status == "REAL":
         lines += [
             f"✅ <b>REAL DEAL</b> — usual price ₹{info['usual']:,}, ippo {info['real_drop']}% kammi",
@@ -221,7 +228,7 @@ def maybe_daily_summary(state, history, stats):
         msg += (f"\n\n⏳ Learning mode — {config.MIN_HISTORY_DAYS} naal history "
                 f"serndha apram dhaan real deals verify panni anuppuven.")
     if stats["blocked"]:
-        msg += f"\n⚠️ Nethu-la irundhu {stats['blocked']} searches Amazon block pannuchu."
+        msg += f"\n⚠️ Kadaisi report-la irundhu {stats['blocked']} searches Amazon block pannuchu."
     tg("sendMessage", {"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": msg, "parse_mode": "HTML"})
     state["summary_day"] = today
 
@@ -240,7 +247,12 @@ def main():
 
     session = make_session()
     candidates, stats = {}, {"blocked": 0, "seen": 0}
+    started = time.monotonic()
     for cat, kw in batch:
+        if time.monotonic() - started > config.TIME_BUDGET_SEC:
+            print("  ! time budget over, meedhi next run-la")
+            state["next"] = jobs.index((cat, kw))
+            break
         print(f"> {cat}: {kw}")
         html = fetch_search(session, kw)
         if not html:
@@ -251,7 +263,8 @@ def main():
         for it in items:
             stats["seen"] += 1
             record(history, it, cat)
-            if it["mrp"] and (it["mrp"] - it["price"]) / it["mrp"] * 100 >= config.MIN_MRP_DISCOUNT:
+            mrp_off = (it["mrp"] - it["price"]) / it["mrp"] * 100 if it["mrp"] else 0
+            if mrp_off >= config.MIN_MRP_DISCOUNT:
                 candidates[it["asin"]] = (it, cat)
         time.sleep(random.uniform(4, 9))
 
@@ -267,7 +280,11 @@ def main():
         if dry:
             print("----\n" + text + "\n----")
         else:
-            send_deal(it, text)
+            try:
+                send_deal(it, text)
+            except Exception as e:
+                print(f"  ! telegram send fail: {e}")
+                continue
             time.sleep(1.5)
         sent[asin] = {"price": it["price"], "ts": int(NOW.timestamp())}
         sent_count += 1
@@ -284,7 +301,10 @@ def main():
         state["blocked_today"] = state.get("blocked_today", 0) + stats["blocked"]
         stats["blocked"] = state["blocked_today"]
         before = state.get("summary_day")
-        maybe_daily_summary(state, history, stats)
+        try:
+            maybe_daily_summary(state, history, stats)
+        except Exception as e:
+            print(f"  ! daily report fail: {e}")
         if state.get("summary_day") != before:
             state["blocked_today"] = 0
 
