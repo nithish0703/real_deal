@@ -264,20 +264,40 @@ def tg(method, payload):
         return json.load(r)
 
 
+def deal_targets():
+    """Deals: un chat + channel (TELEGRAM_CHANNEL_ID secret irundha). Comma pottu pala IDs kudukkalam."""
+    ids = []
+    for var in ("TELEGRAM_CHAT_ID", "TELEGRAM_CHANNEL_ID"):
+        ids += [x.strip() for x in os.environ.get(var, "").split(",") if x.strip()]
+    return list(dict.fromkeys(ids))
+
+
+def send_one(chat, item, text, button):
+    try:
+        if item.get("image"):
+            return tg("sendPhoto", {"chat_id": chat, "photo": item["image"], "caption": text,
+                                    "parse_mode": "HTML", "reply_markup": button})
+    except Exception:
+        pass  # image fail aanaa text-aa anuppu
+    return tg("sendMessage", {"chat_id": chat, "text": text, "parse_mode": "HTML",
+                              "reply_markup": button, "disable_web_page_preview": True})
+
+
 def send_deal(item, text):
-    chat = os.environ["TELEGRAM_CHAT_ID"]
     store = item.get("store", "Amazon")
     url = item.get("url") or f"https://www.amazon.in/dp/{item['asin']}"
     button = {"inline_keyboard": [[{"text": f"🛒 Shop on {store}", "url": url}]]}
-    try:
-        if item.get("image"):
-            tg("sendPhoto", {"chat_id": chat, "photo": item["image"], "caption": text,
-                             "parse_mode": "HTML", "reply_markup": button})
-        else:
-            raise ValueError
-    except Exception:
-        tg("sendMessage", {"chat_id": chat, "text": text, "parse_mode": "HTML",
-                           "reply_markup": button, "disable_web_page_preview": True})
+    ok, errors = 0, []
+    for chat in deal_targets():
+        try:
+            send_one(chat, item, text, button)
+            ok += 1
+        except Exception as e:
+            errors.append(f"{chat}: {e}")
+    for e in errors:
+        print(f"  ! telegram send fail -> {e}")
+    if not ok:
+        raise RuntimeError("ella chats-kum anuppa mudiyala")
 
 
 # ---------------------------------------------------------------- daily summary
@@ -299,7 +319,8 @@ def maybe_daily_summary(state, history, stats):
     if blocked:
         parts = ", ".join(f"{k} {v}" for k, v in blocked.items())
         msg += f"\n⚠️ Kadaisi report-la irundhu blocked searches: {parts}"
-    tg("sendMessage", {"chat_id": os.environ["TELEGRAM_CHAT_ID"], "text": msg, "parse_mode": "HTML"})
+    me = os.environ["TELEGRAM_CHAT_ID"].split(",")[0].strip()   # daily report unakku mattum
+    tg("sendMessage", {"chat_id": me, "text": msg, "parse_mode": "HTML"})
     state["summary_day"] = today
 
 
