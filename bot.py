@@ -224,8 +224,9 @@ def esc(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-CATEGORY_EMOJI = {"Electronics": "🎧", "Shoes": "👟", "Clothing": "👕", "Daily use": "🧴",
-                  "Bags": "🎒", "Watches": "⌚", "Travel": "🧳"}
+CATEGORY_EMOJI = {"Electronics": "🎧", "Shoes": "👟", "Clothing": "👕", "Daily use": "🏠",
+                  "Skincare & Hair": "🧴", "Bags": "🎒", "Women Bags": "👜",
+                  "Watches": "⌚", "Travel": "🧳"}
 
 
 def build_message(item, category, status, info):
@@ -247,7 +248,7 @@ def build_message(item, category, status, info):
         lines.append(f"⏳ Not verified yet — only {info['days']} days of price history")
     if item.get("rating"):
         lines.append(f"⭐ Rating: {item['rating']}/5")
-    lines.append(f"🏷️ Category: {category}")
+    lines.append(f"🏷️ Category: {esc(category)}")
     lines.append(f"🏬 Store: {item.get('store', 'Amazon')}")
     return "\n".join(lines)
 

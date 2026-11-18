@@ -16,11 +16,18 @@ CATEGORIES = {
         "track pants men", "women top",
     ],
     "Daily use": [
-        "toothpaste", "shampoo", "detergent powder", "face wash",
-        "body lotion", "kitchen storage containers", "water bottle steel",
+        "toothpaste", "detergent powder", "kitchen storage containers", "water bottle steel",
+    ],
+    "Skincare & Hair": [
+        "shampoo", "conditioner", "hair oil", "hair serum", "face wash",
+        "face serum", "moisturizer", "sunscreen spf 50", "body lotion", "lip balm",
     ],
     "Bags": [
-        "laptop backpack", "college bag", "women handbag", "sling bag men",
+        "laptop backpack", "college bag", "sling bag men",
+    ],
+    "Women Bags": [
+        "women handbag", "ladies purse", "women sling bag", "women tote bag",
+        "women shoulder bag", "women clutch", "women backpack",
     ],
     "Watches": [
         "men analog watch", "women analog watch", "men digital watch",
@@ -42,7 +49,11 @@ AJIO_CATEGORIES = {
         "women kurtas", "women tops", "women jeans", "men jackets",
     ],
     "Bags": [
-        "backpacks", "women handbags", "men sling bags", "laptop bags",
+        "backpacks", "men sling bags", "laptop bags",
+    ],
+    "Women Bags": [
+        "women handbags", "women sling bags", "women tote bags",
+        "women shoulder bags", "women clutches",
     ],
     "Watches": [
         "men watches", "women watches", "smart watches",
