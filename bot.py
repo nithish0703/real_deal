@@ -168,6 +168,21 @@ def parse_search(html):
     return items
 
 
+def capacity_gb(title):
+    """Title-la irukkra periya storage size (GB). '1TB' -> 1024. Theriyalana None."""
+    sizes = [float(n) * (1024 if u.lower() == "tb" else 1)
+             for n, u in re.findall(r"(\d+(?:\.\d+)?)\s*(gb|tb)\b", title, re.I)]
+    return max(sizes) if sizes else None
+
+
+def too_small(keyword, title):
+    for word, min_gb in getattr(config, "MIN_CAPACITY_GB", {}).items():
+        if word in keyword.lower():
+            gb = capacity_gb(title)
+            return gb is None or gb < min_gb
+    return False
+
+
 # ---------------------------------------------------------------- real-deal check
 def record(history, item, category):
     h = history.setdefault(item["asin"], {"points": []})
@@ -369,6 +384,8 @@ def main():
             continue
         print(f"  {len(items)} products")
         for it in items:
+            if too_small(kw, it["title"]):
+                continue  # e.g. 32GB pendrive skip
             stats["seen"] += 1
             record(history, it, cat)
             mrp_off = (it["mrp"] - it["price"]) / it["mrp"] * 100 if it["mrp"] else 0

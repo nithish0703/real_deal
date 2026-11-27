@@ -5,7 +5,8 @@ CATEGORIES = {
     "Electronics": [
         "wireless earbuds", "bluetooth headphones", "smartwatch", "power bank",
         "bluetooth speaker", "phone charger fast", "smart tv", "laptop",
-        "keyboard mouse combo", "pendrive 64gb",
+        "keyboard mouse combo",
+        "pendrive 64gb", "pendrive 128gb", "pendrive 256gb", "pendrive 512gb",
     ],
     "Shoes": [
         "running shoes men", "sports shoes women", "sneakers men",
@@ -16,7 +17,7 @@ CATEGORIES = {
         "track pants men", "women top",
     ],
     "Bags": [
-        "laptop backpack", "college bag", "sling bag men",
+        "laptop backpack", "college bag",
     ],
     "Watches": [
         "men analog watch", "women analog watch", "men digital watch",
@@ -38,7 +39,7 @@ AJIO_CATEGORIES = {
         "women kurtas", "women tops", "women jeans", "men jackets",
     ],
     "Bags": [
-        "backpacks", "men sling bags", "laptop bags",
+        "backpacks", "laptop bags",
     ],
     "Watches": [
         "men watches", "women watches", "smart watches",
@@ -47,6 +48,9 @@ AJIO_CATEGORIES = {
         "trolley bags", "duffle bags",
     ],
 }
+
+# Indha word irukkra keyword-ku, ivlo GB-ku mela irukkra products mattum (capacity title-la theriyanum)
+MIN_CAPACITY_GB = {"pendrive": 64}
 
 # Ovvoru run-lum ethana keywords check pannanum (GitHub free minutes-ku kammiyaa vechiruken)
 KEYWORDS_PER_RUN = 14          # Amazon
